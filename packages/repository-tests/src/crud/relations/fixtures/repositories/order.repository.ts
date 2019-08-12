@@ -9,11 +9,14 @@ import {
   DefaultCrudRepository,
   juggler,
   repository,
-} from '../../..';
+} from '@loopback/repository';
 import {Customer, Order, OrderRelations, Shipment} from '../models';
 import {CustomerRepository, ShipmentRepository} from '../repositories';
 
+// export function createOrderRepo(repoClass: CrudRepositoryCtor) {
+//   return
 export class OrderRepository extends DefaultCrudRepository<
+  //  repoClass<
   Order,
   typeof Order.prototype.id,
   OrderRelations
@@ -28,7 +31,7 @@ export class OrderRepository extends DefaultCrudRepository<
   >;
 
   constructor(
-    @inject('datasources.db') protected db: juggler.DataSource,
+    @inject('datasources.db') db: juggler.DataSource,
     @repository.getter('CustomerRepository')
     customerRepositoryGetter: Getter<CustomerRepository>,
     @repository.getter('ShipmentRepository')
@@ -39,6 +42,7 @@ export class OrderRepository extends DefaultCrudRepository<
       'customer',
       customerRepositoryGetter,
     );
+
     this.shipment = this.createBelongsToAccessorFor(
       'shipment',
       shipmentRepositoryGetter,
