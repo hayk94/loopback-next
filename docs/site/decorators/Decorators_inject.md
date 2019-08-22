@@ -178,6 +178,39 @@ using `binding.to(value)`.
 To set other types of value providers such as `toDynamicValue`or `toClass`, use
 `@inject.binding` instead.
 
+### @instance
+
+`@instance` injects an instance of a given class from a binding created using
+`toClass()`.
+
+Syntax:
+`@instance(serviceClass?: Constructor, metadata: {skipSubClasses?: boolean})`.
+
+```ts
+class MyController {
+  constructor(@instance(MyService) public myService: MyService) {}
+}
+```
+
+Or even simpler:
+
+```ts
+class MyController {
+  // MyService is inferred from TypeScript design type
+  constructor(@instance() public myService: MyService) {}
+}
+```
+
+Please note the class has to be bound to the context with toClass().
+
+```ts
+const ctx = new Context();
+ctx.bind('my-service').toClass(MyService);
+```
+
+To prevent subclasses from being matched, set `skipSubClasses` to `false` for
+the `metadata` argument.
+
 ### @inject.binding
 
 `@inject.binding` injects a binding for the given key. It can be used to bind
