@@ -16,7 +16,7 @@ export class Shipment extends Entity {
   id: string | number;
 
   @property({type: 'string'})
-  name: string;
+  name: string | number;
 
   @hasMany(() => Order, {keyTo: 'shipment_id'})
   shipmentOrders: Order[];

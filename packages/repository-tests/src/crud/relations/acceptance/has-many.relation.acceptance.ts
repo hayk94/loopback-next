@@ -16,8 +16,9 @@ import {
   withCrudCtx,
 } from '../../../helpers.repository-tests';
 import {Customer, Order} from '../fixtures/models';
-import {CustomerRepository, OrderRepository} from '../fixtures/repositories';
+import {CustomerRepository, OrderRepository, createOrderRepo} from '../fixtures/repositories';
 import {givenBoundCrudRepositories} from '../helpers';
+import { Shipment } from '../fixtures/models/shipment.model';
 
 export function hasManyRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -34,9 +35,12 @@ export function hasManyRelationAcceptance(
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
-        ({customerRepo, orderRepo} = givenBoundCrudRepositories(
+        ({customerRepo} = givenBoundCrudRepositories(
           ctx.dataSource,
         ));
+        // ANGUS: try create orderRepo by the repo that inherit from CrudRepositoryCtor
+        // but how can we get the class OrderRepository if it's created in createOrderRepo();
+        orderRepo = createOrderRepo(repositoryClass);
         const models = [Customer, Order];
         await ctx.dataSource.automigrate(models.map(m => m.name));
       }),
@@ -44,6 +48,7 @@ export function hasManyRelationAcceptance(
 
     beforeEach(async () => {
       await customerRepo.deleteAll();
+      // ANGUS: we don't have deleteAll, findById methods in CrudRepositoryCtor ...
       await orderRepo.deleteAll();
     });
 
@@ -125,13 +130,13 @@ export function hasManyRelationAcceptance(
       ]);
     });
 
-    // it('throws error when query tries to change the foreignKey', async () => {
-    //   await expect(
-    //     patchCustomerOrders(existingCustomerId, {
-    //       customerId: existingCustomerId + 1,
-    //     }),
-    //   ).to.be.rejectedWith(/Property "customerId" cannot be changed!/);
-    // });
+    it('throws error when query tries to change the foreignKey', async () => {
+      await expect(
+        patchCustomerOrders(existingCustomerId, {
+          customerId: existingCustomerId + 1,
+        }),
+      ).to.be.rejectedWith(/Property "customerId" cannot be changed!/);
+    });
 
     it('can delete many instances', async () => {
       await createCustomerOrders(existingCustomerId, {
@@ -146,17 +151,18 @@ export function hasManyRelationAcceptance(
       expect(relatedOrders).to.be.empty();
     });
 
-    // it("does not delete instances that don't belong to the constrained instance", async () => {
-    //   const newOrder = {
-    //     customerId: existingCustomerId + 1,
-    //     description: 'another order',
-    //   };
-    //   await orderRepo.create(newOrder);
-    //   await deleteCustomerOrders(existingCustomerId);
-    //   const orders = await orderRepo.find();
-    //   expect(orders).to.have.length(1);
-    //   expect(_.pick(orders[0], ['customerId', 'description'])).to.eql(newOrder);
-    // });
+    it("does not delete instances that don't belong to the constrained instance", async () => {
+      const newId = (await givenPersistedCustomerInstance()).id;
+      const newOrder = {
+        customerId: newId,
+        description: 'another order',
+      };
+      await orderRepo.create(newOrder);
+      await deleteCustomerOrders(existingCustomerId);
+      const orders = await orderRepo.find();
+      expect(orders).to.have.length(1);
+      expect(toJSON(_.pick(orders[0], ['customerId', 'description']))).to.eql(toJSON(newOrder));
+    });
 
     it('does not create an array of the related model', async () => {
       await expect(

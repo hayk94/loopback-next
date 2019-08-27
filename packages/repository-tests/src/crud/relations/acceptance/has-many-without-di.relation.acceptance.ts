@@ -106,7 +106,6 @@ export function hasManyWithoutDIRelationAcceptance(
 
     //--- HELPERS ---//
 
-    // use strictObjectIDCoercion here to make sure mongo's happy
     @model()
     class Order extends Entity {
       @property({
