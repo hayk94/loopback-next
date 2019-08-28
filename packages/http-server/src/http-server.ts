@@ -92,7 +92,7 @@ export class HttpServer {
     this.server.listen(this.serverOptions);
     await pEvent(this.server, 'listening');
     this._listening = true;
-    this._address = this.server.address();
+    this._address = this.server.address() || '';
   }
 
   /**
