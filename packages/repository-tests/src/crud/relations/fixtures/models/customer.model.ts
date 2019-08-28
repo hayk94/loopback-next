@@ -18,7 +18,7 @@ import {mixedIdType} from '../../helpers';
 @model()
 export class Customer extends Entity {
   @property({
-    type: 'string',
+    type: 'number',
     id: true,
     generated: true,
   })

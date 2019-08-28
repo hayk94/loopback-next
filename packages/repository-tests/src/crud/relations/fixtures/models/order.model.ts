@@ -8,12 +8,10 @@ import {Customer, CustomerWithRelations} from './customer.model';
 import {Shipment, ShipmentWithRelations} from './shipment.model';
 import {mixedIdType} from '../../helpers';
 
-// export function createOrderModel(repoClass: CrudRepositoryCtor) {
-//   return
 @model()
 export class Order extends Entity {
   @property({
-    type: 'string',
+    type: 'number',
     id: true,
     generated: true,
   })

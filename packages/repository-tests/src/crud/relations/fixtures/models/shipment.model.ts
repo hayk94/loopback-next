@@ -10,7 +10,7 @@ import {mixedIdType} from '../../helpers';
 @model()
 export class Shipment extends Entity {
   @property({
-    type: 'string',
+    type: 'number',
     id: true,
     generated: true,
   })
