@@ -5,6 +5,7 @@
 
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {Customer, CustomerWithRelations} from './customer.model';
+import {mixedIdType} from '../../helpers';
 
 @model()
 export class Address extends Entity {
@@ -13,7 +14,7 @@ export class Address extends Entity {
     id: true,
     generated: true,
   })
-  id: string | number;
+  id: mixedIdType;
   @property({
     type: 'string',
   })
@@ -32,7 +33,7 @@ export class Address extends Entity {
   province: string;
 
   @belongsTo(() => Customer)
-  customerId: string | number;
+  customerId: mixedIdType;
 }
 
 export interface AddressRelations {

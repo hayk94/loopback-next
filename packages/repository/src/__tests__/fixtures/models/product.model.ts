@@ -12,7 +12,7 @@ export class Product extends Entity {
     id: true,
     description: 'The unique identifier for a product',
   })
-  id: string | number;
+  id: number;
 
   @property({type: 'string'})
   name: string;

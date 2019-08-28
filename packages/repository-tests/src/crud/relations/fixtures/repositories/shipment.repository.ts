@@ -3,35 +3,40 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {Getter, inject} from '@loopback/context';
+import {Getter} from '@loopback/context';
 import {
-  DefaultCrudRepository,
   HasManyRepositoryFactory,
   juggler,
-  repository,
+  HasManyDefinition,
+  createHasManyRepositoryFactory,
 } from '@loopback/repository';
 import {Order, Shipment, ShipmentRelations} from '../models';
-import {OrderRepository} from '../repositories';
+import {CrudRepositoryCtor} from '../../../..';
 
-export class ShipmentRepository extends DefaultCrudRepository<
-  Shipment,
-  typeof Shipment.prototype.id,
-  ShipmentRelations
-> {
-  public readonly orders: HasManyRepositoryFactory<
-    Order,
-    typeof Shipment.prototype.id
-  >;
+// create the ShipmentRepo by calling this func so that it can be extended from CrudRepositoryCtor
+export function createShipmentRepo(repoClass: CrudRepositoryCtor) {
+  return class ShipmentRepository extends repoClass<
+    Shipment,
+    typeof Shipment.prototype.id,
+    ShipmentRelations
+  > {
+    public readonly orders: HasManyRepositoryFactory<
+      Order,
+      typeof Shipment.prototype.id
+    >;
 
-  constructor(
-    @inject('datasources.db') protected db: juggler.DataSource,
-    @repository.getter('OrderRepository')
-    orderRepositoryGetter: Getter<OrderRepository>,
-  ) {
-    super(Shipment, db);
-    this.orders = this.createHasManyRepositoryFactoryFor(
-      'shipmentOrders',
-      orderRepositoryGetter,
-    );
-  }
+    constructor(
+      db: juggler.DataSource,
+      orderRepositoryGetter: Getter<typeof repoClass.prototype>,
+    ) {
+      super(Shipment, db);
+      const ordersMeta = this.entityClass.definition.relations[
+        'shipmentOrders'
+      ];
+      this.orders = createHasManyRepositoryFactory(
+        ordersMeta as HasManyDefinition,
+        orderRepositoryGetter,
+      );
+    }
+  };
 }

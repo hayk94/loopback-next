@@ -78,9 +78,9 @@ export function crudRepositoryTestSuite(
             /\.integration\.[^.]+$/.test(it))
         );
       });
-      folderTestFiles.forEach(element => {
-        element = `relations/${folder}/` + element;
-        testFiles.push(element);
+      folderTestFiles.forEach(file => {
+        file = `relations/${folder}/` + file;
+        testFiles.push(file);
       });
     }
 

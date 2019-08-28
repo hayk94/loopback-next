@@ -3,35 +3,40 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {Getter, inject} from '@loopback/context';
+import {Getter} from '@loopback/context';
 import {
   BelongsToAccessor,
-  DefaultCrudRepository,
   juggler,
-  repository,
+  createBelongsToAccessor,
+  BelongsToDefinition,
 } from '@loopback/repository';
 import {Address, AddressRelations, Customer} from '../models';
-import {CustomerRepository} from '../repositories';
+import {CrudRepositoryCtor} from '../../../..';
 
-export class AddressRepository extends DefaultCrudRepository<
-  Address,
-  typeof Address.prototype.id,
-  AddressRelations
-> {
-  public readonly customer: BelongsToAccessor<
-    Customer,
-    typeof Address.prototype.zipcode
-  >;
+export function createAddressRepo(repoClass: CrudRepositoryCtor) {
+  return class AddressRepository extends repoClass<
+    Address,
+    typeof Address.prototype.id,
+    AddressRelations
+  > {
+    public readonly customer: BelongsToAccessor<
+      Customer,
+      typeof Address.prototype.id
+    >;
 
-  constructor(
-    @inject('datasources.db') protected db: juggler.DataSource,
-    @repository.getter('CustomerRepository')
-    customerRepositoryGetter: Getter<CustomerRepository>,
-  ) {
-    super(Address, db);
-    this.customer = this._createBelongsToAccessorFor(
-      'customer',
-      customerRepositoryGetter,
-    );
-  }
+    constructor(
+      db: juggler.DataSource,
+      customerRepositoryGetter: Getter<typeof repoClass.prototype>,
+    ) {
+      super(Address, db);
+      // cant use the method createHasManyRepositoryFactoryFor from DefaultCrud
+      // cause it's protected.
+      const customerMeta = this.entityClass.definition.relations['customer'];
+      this.customer = createBelongsToAccessor(
+        customerMeta as BelongsToDefinition,
+        customerRepositoryGetter,
+        this,
+      );
+    }
+  };
 }

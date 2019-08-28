@@ -25,13 +25,14 @@ import {
   CrudTestContext,
   DataSourceOptions,
 } from '../../../types.repository-tests';
+import {mixedIdType} from '../helpers';
 
 export function hasManyWithoutDIRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
   repositoryClass: CrudRepositoryCtor,
   features: CrudFeatures,
 ) {
-  describe('HasMany relation without di (acceptance)', () => {
+  describe('HasMany relation without DI (acceptance)', () => {
     before(deleteAllModelsInDefaultDataSource);
     // Given a Customer and Order models - see definitions at the bottom
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +57,7 @@ export function hasManyWithoutDIRelationAcceptance(
 
     it('can create an instance of the related model', async () => {
       async function createCustomerOrders(
-        customerId: number | string,
+        customerId: mixedIdType,
         orderData: Partial<Order>,
       ): Promise<Order> {
         return customerRepo.orders(customerId).create(orderData);
@@ -78,12 +79,12 @@ export function hasManyWithoutDIRelationAcceptance(
 
     it('can find instances of the related model (acceptance)', async () => {
       async function createCustomerOrders(
-        customerId: number | string,
+        customerId: mixedIdType,
         orderData: Partial<Order>,
       ): Promise<Order> {
         return customerRepo.orders(customerId).create(orderData);
       }
-      async function findCustomerOrders(customerId: number | string) {
+      async function findCustomerOrders(customerId: mixedIdType) {
         return customerRepo.orders(customerId).find();
       }
 
@@ -113,7 +114,7 @@ export function hasManyWithoutDIRelationAcceptance(
         id: true,
         generated: true,
       })
-      id: number | string;
+      id: mixedIdType;
 
       @property({
         type: 'string',
@@ -125,7 +126,7 @@ export function hasManyWithoutDIRelationAcceptance(
         type: features.idType,
         required: true,
       })
-      customerId: number | string;
+      customerId: mixedIdType;
     }
 
     @model()
@@ -135,7 +136,7 @@ export function hasManyWithoutDIRelationAcceptance(
         id: true,
         generated: true,
       })
-      id: number | string;
+      id: mixedIdType;
 
       @property({
         type: 'string',

@@ -16,8 +16,7 @@ import {
   withCrudCtx,
 } from '../../../helpers.repository-tests';
 import {Address, Customer} from '../fixtures/models';
-import {AddressRepository, CustomerRepository} from '../fixtures/repositories';
-import {givenBoundCrudRepositories} from '../helpers';
+import {givenBoundCrudRepositories, mixedIdType} from '../helpers';
 
 export function hasOneRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -25,8 +24,11 @@ export function hasOneRelationAcceptance(
   features: CrudFeatures,
 ) {
   describe('hasOne relation (acceptance)', () => {
-    let customerRepo: CustomerRepository;
-    let addressRepo: AddressRepository;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let customerRepo: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let addressRepo: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let existingCustomerId: any;
 
     before(deleteAllModelsInDefaultDataSource);
@@ -35,6 +37,7 @@ export function hasOneRelationAcceptance(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
         ({customerRepo, addressRepo} = givenBoundCrudRepositories(
           ctx.dataSource,
+          repositoryClass,
         ));
         const models = [Customer, Address];
         await ctx.dataSource.automigrate(models.map(m => m.name));
@@ -229,30 +232,30 @@ export function hasOneRelationAcceptance(
     /*---------------- HELPERS -----------------*/
 
     async function createCustomerAddress(
-      customerId: string | number,
+      customerId: mixedIdType,
       addressData: Partial<Address>,
     ): Promise<Address> {
       return customerRepo.address(customerId).create(addressData);
     }
 
-    async function findCustomerAddress(customerId: string | number) {
+    async function findCustomerAddress(customerId: mixedIdType) {
       return customerRepo.address(customerId).get();
     }
 
     async function findCustomerAddressWithFilter(
-      customerId: string | number,
+      customerId: mixedIdType,
       filter: Filter<Address>,
     ) {
       return customerRepo.address(customerId).get(filter);
     }
     async function patchCustomerAddress(
-      customerId: string | number,
+      customerId: mixedIdType,
       addressData: Partial<Address>,
     ) {
       return customerRepo.address(customerId).patch(addressData);
     }
 
-    async function deleteCustomerAddress(customerId: string | number) {
+    async function deleteCustomerAddress(customerId: mixedIdType) {
       return customerRepo.address(customerId).delete();
     }
 

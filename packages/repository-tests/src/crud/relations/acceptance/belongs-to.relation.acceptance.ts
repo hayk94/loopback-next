@@ -15,11 +15,6 @@ import {
   DataSourceOptions,
 } from '../../../types.repository-tests';
 import {Customer, Order, Shipment} from '../fixtures/models';
-import {
-  CustomerRepository,
-  OrderRepository,
-  ShipmentRepository,
-} from '../fixtures/repositories';
 import {givenBoundCrudRepositories} from '../helpers';
 
 export function belongsToRelationAcceptance(
@@ -30,15 +25,18 @@ export function belongsToRelationAcceptance(
   describe('BelongsTo relation (acceptance)', () => {
     before(deleteAllModelsInDefaultDataSource);
 
-    // Given a Customer and Order models - see definitions at the bottom
-    let customerRepo: CustomerRepository;
-    let orderRepo: OrderRepository;
-    let shipmentRepo: ShipmentRepository;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let customerRepo: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let orderRepo: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let shipmentRepo: any;
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
         ({customerRepo, orderRepo, shipmentRepo} = givenBoundCrudRepositories(
           ctx.dataSource,
+          repositoryClass,
         ));
         const models = [Customer, Order, Shipment];
         await ctx.dataSource.automigrate(models.map(m => m.name));

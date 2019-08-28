@@ -3,65 +3,76 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {Getter, inject} from '@loopback/context';
+import {Getter} from '@loopback/context';
 import {
   BelongsToAccessor,
-  DefaultCrudRepository,
   HasManyRepositoryFactory,
   HasOneRepositoryFactory,
   juggler,
-  repository,
+  createHasManyRepositoryFactory,
+  HasManyDefinition,
+  HasOneDefinition,
+  createBelongsToAccessor,
+  BelongsToDefinition,
+  createHasOneRepositoryFactory,
 } from '@loopback/repository';
 import {Address, Customer, CustomerRelations, Order} from '../models';
-import {AddressRepository} from './address.repository';
-import {OrderRepository} from './order.repository';
+import {CrudRepositoryCtor} from '../../../../types.repository-tests';
 
-export class CustomerRepository extends DefaultCrudRepository<
-  Customer,
-  typeof Customer.prototype.id,
-  CustomerRelations
-> {
-  public readonly orders: HasManyRepositoryFactory<
-    Order,
-    typeof Customer.prototype.id
-  >;
-  public readonly address: HasOneRepositoryFactory<
-    Address,
-    typeof Customer.prototype.id
-  >;
-  public readonly customers: HasManyRepositoryFactory<
+// create the CustomerRepo by calling this func so that it can be extended from CrudRepositoryCtor
+export function createCustomerRepo(repoClass: CrudRepositoryCtor) {
+  return class CustomerRepository extends repoClass<
     Customer,
-    typeof Customer.prototype.id
-  >;
-  public readonly parent: BelongsToAccessor<
-    Customer,
-    typeof Customer.prototype.id
-  >;
+    typeof Customer.prototype.id,
+    CustomerRelations
+  > {
+    public readonly orders: HasManyRepositoryFactory<
+      Order,
+      typeof Customer.prototype.id
+    >;
+    public readonly address: HasOneRepositoryFactory<
+      Address,
+      typeof Customer.prototype.id
+    >;
+    public readonly customers: HasManyRepositoryFactory<
+      Customer,
+      typeof Customer.prototype.id
+    >;
+    public readonly parent: BelongsToAccessor<
+      Customer,
+      typeof Customer.prototype.id
+    >;
 
-  constructor(
-    @inject('datasources.db') protected db: juggler.DataSource,
-    @repository.getter('OrderRepository')
-    orderRepositoryGetter: Getter<OrderRepository>,
-    @repository.getter('AddressRepository')
-    addressRepositoryGetter: Getter<AddressRepository>,
-  ) {
-    super(Customer, db);
-    this.orders = this.createHasManyRepositoryFactoryFor(
-      'orders',
-      orderRepositoryGetter,
-    );
-    this.address = this.createHasOneRepositoryFactoryFor(
-      'address',
-      addressRepositoryGetter,
-    );
+    constructor(
+      db: juggler.DataSource,
+      orderRepositoryGetter: Getter<typeof repoClass.prototype>,
+      addressRepositoryGetter: Getter<typeof repoClass.prototype>,
+    ) {
+      super(Customer, db);
+      // can't use the method createHasManyRepositoryFactoryFor from DefaultCrud
+      // cause it's protected.
+      const ordersMeta = this.entityClass.definition.relations['orders'];
+      this.orders = createHasManyRepositoryFactory(
+        ordersMeta as HasManyDefinition,
+        orderRepositoryGetter,
+      );
 
-    this.customers = this.createHasManyRepositoryFactoryFor(
-      'customers',
-      Getter.fromValue(this),
-    );
-    this.parent = this.createBelongsToAccessorFor(
-      'parent',
-      Getter.fromValue(this),
-    );
-  }
+      const addressMeta = this.entityClass.definition.relations['address'];
+      this.address = createHasOneRepositoryFactory(
+        addressMeta as HasOneDefinition,
+        addressRepositoryGetter,
+      );
+      const customersMeta = this.entityClass.definition.relations['customers'];
+      this.customers = createHasManyRepositoryFactory(
+        customersMeta as HasManyDefinition,
+        Getter.fromValue(this),
+      );
+      const parentMeta = this.entityClass.definition.relations['parent'];
+      this.parent = createBelongsToAccessor(
+        parentMeta as BelongsToDefinition,
+        Getter.fromValue(this),
+        this,
+      );
+    }
+  };
 }

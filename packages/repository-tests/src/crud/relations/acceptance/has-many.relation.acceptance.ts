@@ -16,9 +16,7 @@ import {
   withCrudCtx,
 } from '../../../helpers.repository-tests';
 import {Customer, Order} from '../fixtures/models';
-import {CustomerRepository, OrderRepository, createOrderRepo} from '../fixtures/repositories';
-import {givenBoundCrudRepositories} from '../helpers';
-import { Shipment } from '../fixtures/models/shipment.model';
+import {givenBoundCrudRepositories, mixedIdType} from '../helpers';
 
 export function hasManyRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -28,19 +26,19 @@ export function hasManyRelationAcceptance(
   describe('HasMany relation (acceptance)', () => {
     before(deleteAllModelsInDefaultDataSource);
 
-    let customerRepo: CustomerRepository;
-    let orderRepo: OrderRepository;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let customerRepo: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let orderRepo: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let existingCustomerId: any;
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
-        ({customerRepo} = givenBoundCrudRepositories(
+        ({customerRepo, orderRepo} = givenBoundCrudRepositories(
           ctx.dataSource,
+          repositoryClass,
         ));
-        // ANGUS: try create orderRepo by the repo that inherit from CrudRepositoryCtor
-        // but how can we get the class OrderRepository if it's created in createOrderRepo();
-        orderRepo = createOrderRepo(repositoryClass);
         const models = [Customer, Order];
         await ctx.dataSource.automigrate(models.map(m => m.name));
       }),
@@ -48,7 +46,6 @@ export function hasManyRelationAcceptance(
 
     beforeEach(async () => {
       await customerRepo.deleteAll();
-      // ANGUS: we don't have deleteAll, findById methods in CrudRepositoryCtor ...
       await orderRepo.deleteAll();
     });
 
@@ -161,7 +158,9 @@ export function hasManyRelationAcceptance(
       await deleteCustomerOrders(existingCustomerId);
       const orders = await orderRepo.find();
       expect(orders).to.have.length(1);
-      expect(toJSON(_.pick(orders[0], ['customerId', 'description']))).to.eql(toJSON(newOrder));
+      expect(toJSON(_.pick(orders[0], ['customerId', 'description']))).to.eql(
+        toJSON(newOrder),
+      );
     });
 
     it('does not create an array of the related model', async () => {
@@ -211,39 +210,39 @@ export function hasManyRelationAcceptance(
 
     // repository helper methods
     async function createCustomerOrders(
-      customerId: string | number,
+      customerId: mixedIdType,
       orderData: Partial<Order>,
     ): Promise<Order> {
       return customerRepo.orders(customerId).create(orderData);
     }
 
-    async function findCustomerOrders(customerId: string | number) {
+    async function findCustomerOrders(customerId: mixedIdType) {
       return customerRepo.orders(customerId).find();
     }
 
     async function patchCustomerOrders(
-      customerId: string | number,
+      customerId: mixedIdType,
       order: Partial<Order>,
     ) {
       return customerRepo.orders(customerId).patch(order);
     }
 
-    async function deleteCustomerOrders(customerId: string | number) {
+    async function deleteCustomerOrders(customerId: mixedIdType) {
       return customerRepo.orders(customerId).delete();
     }
 
-    async function getParentCustomer(customerId: string | number) {
+    async function getParentCustomer(customerId: mixedIdType) {
       return customerRepo.parent(customerId);
     }
 
     async function createCustomerChildren(
-      customerId: string | number,
+      customerId: mixedIdType,
       customerData: Partial<Customer>,
     ) {
       return customerRepo.customers(customerId).create(customerData);
     }
 
-    async function findCustomerChildren(customerId: string | number) {
+    async function findCustomerChildren(customerId: mixedIdType) {
       return customerRepo.customers(customerId).find();
     }
 

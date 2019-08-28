@@ -6,6 +6,7 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Shipment, ShipmentWithRelations} from './shipment.model';
+import {mixedIdType} from '../../helpers';
 
 // export function createOrderModel(repoClass: CrudRepositoryCtor) {
 //   return
@@ -16,7 +17,7 @@ export class Order extends Entity {
     id: true,
     generated: true,
   })
-  id: string | number;
+  id: mixedIdType;
 
   @property({
     type: 'string',
@@ -32,10 +33,10 @@ export class Order extends Entity {
   isShipped: boolean;
 
   @belongsTo(() => Customer)
-  customerId: string | number;
+  customerId: mixedIdType;
 
   @belongsTo(() => Shipment, {name: 'shipment'})
-  shipment_id: string | number;
+  shipment_id: mixedIdType;
 }
 
 export interface OrderRelations {
