@@ -47,7 +47,7 @@ describe('REST Explorer mounted as an express router', () => {
   });
 
   async function givenLoopBackApp(
-    options: {rest: RestServerConfig} = {rest: {port: 0}},
+    options: {rest: RestServerConfig & {protocol?: 'http'}} = {rest: {port: 0}},
   ) {
     options.rest = givenHttpServerConfig(options.rest);
     const app = new RestApplication(options);
