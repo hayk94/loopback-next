@@ -1,6 +1,36 @@
 ## Todo
 
 - Move the booter to `@loopback/boot`, rename it to `ModelApiBooter`
+- spike docs: high-level overview of the concept
+
+Open questions:
+
+- Where to keep model config files?
+  - `/public-models/product.config.json` (JSON, must be outside src)
+  - `/src/public-models/product-config.ts` (TS, can be inside src, more flexible)
+
+- Load models via DI, or rather let config files to load them via require?
+
+    ```ts
+    {
+      model: require('../models/product.model'),
+      // ...
+    }
+    ```
+
+- If we use TS files, then we can get rid of the extension point too
+
+    ```ts
+    {
+      model: require('../models/product.model').Product,
+      pattern: require('@loopback/rest-crud').CrudRestApiBuilder,
+      basePath: '/products',
+      dataSource: 'db',
+
+      // alternatively:
+      dataSource: require('../datasources/db.datasource').DbDataSource,
+    }
+
 
 ## Tasks
 
@@ -23,3 +53,8 @@
   in this spike
 
 TBD: the actual implementation
+
+### Out of scope
+
+- Infer base path (`/products`) from model name (`Product`). I'd like to
+  implement this part in the CLI scaffolding model config file.
