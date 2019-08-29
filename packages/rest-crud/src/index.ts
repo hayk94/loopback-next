@@ -5,3 +5,4 @@
 
 export * from './crud-rest.component';
 export * from './crud-rest.controller';
+export * from './repository-builder';

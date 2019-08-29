@@ -98,7 +98,11 @@ export class RestBooter extends BaseArtifactBooter {
     const allBuilders = await this.getModelApiBuilders();
     const builder = allBuilders.find(b => b.pattern === pattern);
     if (!builder) {
-      throw new Error(`Unsupported API pattern "${pattern}"`);
+      const availableBuilders = allBuilders.map(b => b.pattern).join(', ');
+      throw new Error(
+        `Unsupported API pattern "${pattern}". ` +
+          `Available patterns: ${availableBuilders || '<none>'}`,
+      );
     }
     return builder;
   }

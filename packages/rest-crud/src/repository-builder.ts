@@ -12,17 +12,13 @@ import {
 import * as assert from 'assert';
 import {transformFunctionBody} from './helpers';
 
-interface CrudRepoCtor<T extends Entity, IdType, Relations extends object> {
-  new (
-    entityCtor: typeof Entity & {prototype: T},
-    ds: juggler.DataSource,
-  ): EntityCrudRepository<T, IdType, Relations>;
-}
 export function defineRepositoryClass<
   T extends Entity,
   IdType,
   Relations extends object = {}
->(entityClass: typeof Entity & {prototype: T}) {
+>(
+  entityClass: typeof Entity & {prototype: T},
+): RepositoryClass<T, IdType, Relations> {
   function template(
     EntityCtor: typeof Entity & {prototype: T},
     BaseRepository: CrudRepoCtor<T, IdType, Relations>,
@@ -43,4 +39,19 @@ export function defineRepositoryClass<
   const repo = defineNamedRepo(entityClass, DefaultCrudRepository);
   assert.equal(repo.name, repoName);
   return repo;
+}
+
+export interface RepositoryClass<
+  T extends Entity,
+  IdType,
+  Relations extends object
+> {
+  new (ds: juggler.DataSource): EntityCrudRepository<T, IdType, Relations>;
+}
+
+interface CrudRepoCtor<T extends Entity, IdType, Relations extends object> {
+  new (
+    entityCtor: typeof Entity & {prototype: T},
+    ds: juggler.DataSource,
+  ): EntityCrudRepository<T, IdType, Relations>;
 }
