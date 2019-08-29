@@ -1,6 +1,5 @@
 ## Todo
 
-- Refactor model setup code into rest-crud, introduce an extension point
 - Write a new example app showing a full end-to-end project (including build)
   using the new feature
 
@@ -20,3 +19,6 @@
 - Add support for artifact option `rootDir` to `@loopback/boot`.
 
 - Improve rest-crud to create a named controller class.
+
+- Improve `@loopback/metadata` and `@loopback/context` per changes made
+  in this spike

@@ -31,6 +31,8 @@ import {
   ResponsesObject,
   SchemaObject,
 } from '@loopback/rest';
+import {transformFunctionBody} from './helpers';
+import assert = require('assert');
 
 // Ideally, this file should simply `export class CrudRestController<...>{}`
 // Unfortunately, that's not possible for several reasons.
@@ -241,8 +243,22 @@ export function defineCrudRestController<
     }
   }
 
-  // See https://github.com/microsoft/TypeScript/issues/14607
-  return CrudRestControllerImpl;
+  function template(CrudRestController: typeof CrudRestControllerImpl) {
+    return class ModelNameController extends CrudRestController {
+      constructor(repository: EntityCrudRepository<T, IdType, Relations>) {
+        super(repository);
+      }
+    };
+  }
+
+  const controllerName = modelName + 'Controller';
+  const defineNamedController = transformFunctionBody(template, code =>
+    code.replace(/\bModelNameController\b/g, controllerName),
+  );
+
+  const controller = defineNamedController(CrudRestControllerImpl);
+  assert.equal(controller.name, controllerName);
+  return controller;
 }
 
 function getIdSchema<T extends Entity>(

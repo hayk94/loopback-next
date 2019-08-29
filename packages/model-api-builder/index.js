@@ -1,7 +1,6 @@
 // Copyright IBM Corp. 2019. All Rights Reserved.
-// Node module: @loopback/rest-crud
+// Node module: @loopback/rest-builder-plugin
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-export * from './crud-rest.component';
-export * from './crud-rest.controller';
+module.exports = require('./dist');

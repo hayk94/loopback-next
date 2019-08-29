@@ -14,6 +14,7 @@ import {
   RepositoryMixin,
 } from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
+import {CrudRestComponent} from '@loopback/rest-crud';
 import {
   createRestAppClient,
   expect,
@@ -80,6 +81,7 @@ describe('rest booter acceptance tests', () => {
       super(options);
       this.projectRoot = sandbox.path + '/dist';
       this.booters(RestBooter);
+      this.component(CrudRestComponent);
     }
   }
 

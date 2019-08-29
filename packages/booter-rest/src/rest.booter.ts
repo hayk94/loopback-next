@@ -10,20 +10,18 @@ import {
   booter,
 } from '@loopback/boot';
 import {
-  Application,
   config,
-  ControllerClass,
   CoreBindings,
+  extensionPoint,
+  extensions,
+  Getter,
   inject,
 } from '@loopback/core';
 import {
-  ApplicationWithRepositories,
-  Class,
-  DefaultCrudRepository,
-  Entity,
-  Model,
-} from '@loopback/repository';
-import {defineCrudRestController} from '@loopback/rest-crud';
+  ModelApiBuilder,
+  MODEL_API_BUILDER_PLUGINS,
+} from '@loopback/model-api-builder';
+import {ApplicationWithRepositories, Model} from '@loopback/repository';
 import * as debugFactory from 'debug';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -32,12 +30,24 @@ import {promisify} from 'util';
 const debug = debugFactory('loopback:boot:rest-booter');
 const readFile = promisify(fs.readFile);
 
+/* Ideally, we want to call the following decorators:
+  @booter('rest')
+  @extensionPoint(MODEL_API_BUILDER_PLUGINS)
+Unfortunately, BindDecoratorFactory is not able to merge metadata from multiple
+calls yet and the code shown throw the following error:
+  Decorator BindDecoratorFactory cannot be applied more than once
+  on class RestBooter
+As a temporary fix to get this spike
+*/
 @booter('rest')
+@extensionPoint(MODEL_API_BUILDER_PLUGINS)
 export class RestBooter extends BaseArtifactBooter {
   constructor(
     @inject(CoreBindings.APPLICATION_INSTANCE)
     public app: ApplicationWithRepositories,
     @inject(BootBindings.PROJECT_ROOT) projectRoot: string,
+    @extensions()
+    public getModelApiBuilders: Getter<ModelApiBuilder[]>,
     @config()
     public booterConfig: ArtifactOptions = {},
   ) {
@@ -50,18 +60,22 @@ export class RestBooter extends BaseArtifactBooter {
     );
   }
 
-  async configure(): Promise<void> {
-    await super.configure();
-    // TODO: scan extensions contributing API patterns
-    console.log('rootDir', this.projectRoot);
-    console.log('dirs', this.dirs);
-  }
-
   async load(): Promise<void> {
     // Important: don't call `super.load()` here, it would try to load
-    // classes via `loadClassesFromFiles` - that does not make sense for JSON
-    // files
-    await Promise.all(this.discovered.map(f => this.setupModel(f)));
+    // classes via `loadClassesFromFiles` - that won't work for JSON files
+    await Promise.all(
+      this.discovered.map(async f => {
+        try {
+          // It's important to await before returning,
+          // otherwise the catch block won't receive errors
+          await this.setupModel(f);
+        } catch (err) {
+          const shortPath = path.relative(this.projectRoot, f);
+          err.message += ` (while loading ${shortPath})`;
+          throw err;
+        }
+      }),
+    );
   }
 
   async setupModel(configFile: string): Promise<void> {
@@ -69,18 +83,24 @@ export class RestBooter extends BaseArtifactBooter {
     debug(
       'Loaded model config from %s',
       path.relative(this.projectRoot, configFile),
-      config,
+      cfg,
     );
 
     const modelClass = await this.app.get<typeof Model & {prototype: Model}>(
       `models.${cfg.model}`,
     );
 
-    // TODO: use ExtensionPoint to resolve the pattern
-    if (cfg.pattern !== 'CrudRest') {
-      throw new Error(`Unsupported API pattern ${cfg.pattern}`);
+    const builder = await this.getApiBuilderForPattern(cfg.pattern);
+    await builder.setup(this.app, modelClass, cfg);
+  }
+
+  async getApiBuilderForPattern(pattern: string): Promise<ModelApiBuilder> {
+    const allBuilders = await this.getModelApiBuilders();
+    const builder = allBuilders.find(b => b.pattern === pattern);
+    if (!builder) {
+      throw new Error(`Unsupported API pattern "${pattern}"`);
     }
-    setupCrudRest(this.app, modelClass, cfg);
+    return builder;
   }
 }
 
@@ -94,105 +114,3 @@ export const RestDefaults: ArtifactOptions = {
   extensions: ['.config.json'],
   nested: true,
 };
-
-// TODO: move this interface to rest-booter-plugin package
-export type ModelConfig = {
-  model: string;
-  pattern: string;
-  dataSource: string;
-  basePath: string;
-  [patternSpecificSetting: string]: unknown;
-};
-
-// TODO: move the following functions to rest-crud package
-function setupCrudRest(
-  app: Application & ApplicationWithRepositories,
-  modelClass: typeof Model & {prototype: Model},
-  cfg: ModelConfig,
-) {
-  if (!(modelClass.prototype instanceof Entity)) {
-    throw new Error(
-      `CrudRestController requires an Entity, Models are not supported. (Model name: ${modelClass.name})`,
-    );
-  }
-  const entityClass = modelClass as typeof Entity & {prototype: Entity};
-
-  // TODO Check if the repository class has been already defined.
-  // If yes, then skip creation of the default repository
-  const repositoryClass = createCrudRepository(entityClass, cfg);
-  app.repository(repositoryClass);
-  debug('Registered repository class', repositoryClass.name);
-
-  const controllerClass = createCrudRestController(entityClass, cfg);
-  app.controller(controllerClass);
-  debug('Registered controller class', controllerClass.name);
-}
-
-function createCrudRepository(
-  entityClass: typeof Entity & {prototype: Entity},
-  modelConfig: ModelConfig,
-): Class<DefaultCrudRepository<Entity, unknown>> {
-  const factory = new Function(
-    'entityClass',
-    'DefaultCrudRepository',
-    `
-  return class ${entityClass.name}Repository extends DefaultCrudRepository {
-    constructor(dataSource) {
-      super(entityClass, dataSource);
-    }
-  };
-    `,
-  );
-
-  const repositoryClass = factory(
-    entityClass,
-    DefaultCrudRepository, // TODO(bajtos) make this configurable
-  );
-  inject(`datasources.${modelConfig.dataSource}`)(
-    repositoryClass,
-    undefined,
-    0,
-  );
-
-  return repositoryClass;
-}
-
-function createCrudRestController(
-  entityClass: typeof Entity & {prototype: Entity},
-  modelConfig: ModelConfig,
-): ControllerClass {
-  const CrudRestController = defineCrudRestController(
-    entityClass,
-    // important - forward the entire config object to allow controller
-    // factories to accept additional (custom) config options
-    modelConfig,
-  );
-
-  // TODO(bajtos) Move this function to rest-crud package,
-  // improve defineCrudRestController to create a named class
-  const factory = new Function(
-    'entityClass',
-    'CrudRestController',
-    'DefaultCrudRepository',
-    `
-  return class ${entityClass.name}Controller extends CrudRestController {
-    constructor(repository) {
-      super(repository);
-    }
-  };
-  `,
-  );
-  const controllerClass = factory(
-    entityClass,
-    CrudRestController,
-    DefaultCrudRepository,
-  );
-
-  inject(`repositories.${entityClass.name}Repository`)(
-    controllerClass,
-    undefined,
-    0,
-  );
-
-  return controllerClass;
-}
