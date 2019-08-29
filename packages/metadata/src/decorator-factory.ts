@@ -369,7 +369,7 @@ export class ClassDecoratorFactory<T> extends DecoratorFactory<
   ) {
     if (ownMetadata != null) {
       throw new Error(
-        'Decorator cannot be applied more than once on ' +
+        `Decorator ${this.constructor.name} cannot be applied more than once on ` +
           DecoratorFactory.getTargetName(target),
       );
     }

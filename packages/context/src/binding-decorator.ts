@@ -21,6 +21,25 @@ import {Constructor} from './value-promise';
  * Decorator factory for `@bind`
  */
 class BindDecoratorFactory extends ClassDecoratorFactory<BindingMetadata> {
+  mergeWithOwn(
+    ownMetadata: BindingMetadata,
+    target: Function,
+    member?: string | undefined,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    descriptorOrIndex?: TypedPropertyDescriptor<any> | number,
+  ) {
+    if (!ownMetadata) {
+      return super.mergeWithOwn(ownMetadata, target, member, descriptorOrIndex);
+    }
+
+    // TODO: assert that this.spec.target is the same as ownMetadata.target
+    return {
+      ...ownMetadata,
+      ...this.spec,
+      templates: [...ownMetadata.templates, ...this.spec.templates],
+    };
+  }
+
   mergeWithInherited(inherited: BindingMetadata, target: Function) {
     if (inherited) {
       return {
