@@ -672,7 +672,7 @@ paths:
   it('supports HTTPS protocol with key and certificate files', async () => {
     const keyPath = path.join(FIXTURES, 'key.pem');
     const certPath = path.join(FIXTURES, 'cert.pem');
-    const options = {
+    const options: RestServerConfig = {
       port: 0,
       protocol: 'https',
       key: fs.readFileSync(keyPath),
@@ -689,7 +689,7 @@ paths:
 
   it('supports HTTPS protocol with a pfx file', async () => {
     const pfxPath = path.join(FIXTURES, 'pfx.pfx');
-    const options = {
+    const options: RestServerConfig = {
       port: 0,
       protocol: 'https',
       pfx: fs.readFileSync(pfxPath),
@@ -756,7 +756,7 @@ paths:
   it('honors HTTPS config binding after instantiation', async () => {
     const keyPath = path.join(FIXTURES, 'key.pem');
     const certPath = path.join(FIXTURES, 'cert.pem');
-    const options = {
+    const options: RestServerConfig = {
       port: 0,
       protocol: 'https',
       key: undefined,
