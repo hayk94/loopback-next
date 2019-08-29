@@ -1,7 +1,6 @@
 ## Todo
 
-- Write a new example app showing a full end-to-end project (including build)
-  using the new feature
+- Move the booter to `@loopback/boot`, rename it to `ModelApiBooter`
 
 ## Tasks
 
@@ -22,3 +21,5 @@
 
 - Improve `@loopback/metadata` and `@loopback/context` per changes made
   in this spike
+
+TBD: the actual implementation
