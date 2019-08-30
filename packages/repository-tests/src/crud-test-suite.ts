@@ -72,8 +72,8 @@ export function crudRepositoryTestSuite(
       let folderTestFiles = fs.readdirSync(relationsTestRoot);
       folderTestFiles = folderTestFiles.filter(function(it) {
         return (
-          (!!require.extensions[path.extname(it).toLowerCase()] &&
-            /\.acceptance\.[^.]+$/.test(it))
+          !!require.extensions[path.extname(it).toLowerCase()] &&
+          /\.acceptance\.[^.]+$/.test(it)
         );
       });
       folderTestFiles.forEach(file => {

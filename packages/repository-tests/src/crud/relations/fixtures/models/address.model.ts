@@ -3,7 +3,15 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {belongsTo, Entity, model, property} from '@loopback/repository';
+import {
+  belongsTo,
+  BelongsToAccessor,
+  Entity,
+  EntityCrudRepository,
+  model,
+  property,
+} from '@loopback/repository';
+import {MixedIdType} from '../../../../helpers.repository-tests';
 import {Customer, CustomerWithRelations} from './customer.model';
 
 @model()
@@ -12,7 +20,7 @@ export class Address extends Entity {
     id: true,
     generated: true,
   })
-  id: unknown;
+  id: MixedIdType;
   @property({
     type: 'string',
   })
@@ -31,7 +39,7 @@ export class Address extends Entity {
   province: string;
 
   @belongsTo(() => Customer)
-  customerId: unknown;
+  customerId: MixedIdType;
 }
 
 export interface AddressRelations {
@@ -39,3 +47,9 @@ export interface AddressRelations {
 }
 
 export type AddressWithRelations = Address & AddressRelations;
+
+export interface AddressRepository
+  extends EntityCrudRepository<Address, typeof Address.prototype.id> {
+  // define additional members like relation methods here
+  customer?: BelongsToAccessor<Customer, MixedIdType>;
+}

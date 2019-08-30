@@ -3,7 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {EntityNotFoundError, Filter} from '@loopback/repository';
+import {DataObject, EntityNotFoundError, Filter} from '@loopback/repository';
 import {expect, toJSON} from '@loopback/testlab';
 import {
   CrudFeatures,
@@ -13,9 +13,15 @@ import {
 } from '../../..';
 import {
   deleteAllModelsInDefaultDataSource,
+  MixedIdType,
   withCrudCtx,
 } from '../../../helpers.repository-tests';
-import {Address, Customer} from '../fixtures/models';
+import {
+  Address,
+  AddressRepository,
+  Customer,
+  CustomerRepository,
+} from '../fixtures/models';
 import {givenBoundCrudRepositories} from '../helpers';
 
 export function hasOneRelationAcceptance(
@@ -24,12 +30,9 @@ export function hasOneRelationAcceptance(
   features: CrudFeatures,
 ) {
   describe('hasOne relation (acceptance)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let customerRepo: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let addressRepo: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let existingCustomerId: unknown;
+    let customerRepo: CustomerRepository;
+    let addressRepo: AddressRepository;
+    let existingCustomerId: MixedIdType;
 
     before(deleteAllModelsInDefaultDataSource);
 
@@ -233,30 +236,30 @@ export function hasOneRelationAcceptance(
     /*---------------- HELPERS -----------------*/
 
     async function createCustomerAddress(
-      customerId: unknown,
-      addressData: Partial<Address>,
+      customerId: MixedIdType,
+      addressData: DataObject<Address>,
     ): Promise<Address> {
       return customerRepo.address(customerId).create(addressData);
     }
 
-    async function findCustomerAddress(customerId: unknown) {
+    async function findCustomerAddress(customerId: MixedIdType) {
       return customerRepo.address(customerId).get();
     }
 
     async function findCustomerAddressWithFilter(
-      customerId: unknown,
+      customerId: MixedIdType,
       filter: Filter<Address>,
     ) {
       return customerRepo.address(customerId).get(filter);
     }
     async function patchCustomerAddress(
-      customerId: unknown,
-      addressData: Partial<Address>,
+      customerId: MixedIdType,
+      addressData: DataObject<Address>,
     ) {
       return customerRepo.address(customerId).patch(addressData);
     }
 
-    async function deleteCustomerAddress(customerId: unknown) {
+    async function deleteCustomerAddress(customerId: MixedIdType) {
       return customerRepo.address(customerId).delete();
     }
 

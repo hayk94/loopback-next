@@ -3,6 +3,13 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
+import {
+  BelongsToAccessor,
+  BelongsToDefinition,
+  createBelongsToAccessor,
+  EntityNotFoundError,
+  Getter,
+} from '@loopback/repository';
 import {expect, toJSON} from '@loopback/testlab';
 import {
   deleteAllModelsInDefaultDataSource,
@@ -14,9 +21,15 @@ import {
   CrudTestContext,
   DataSourceOptions,
 } from '../../../types.repository-tests';
-import {Customer, Order, Shipment} from '../fixtures/models';
+import {
+  Customer,
+  CustomerRepository,
+  Order,
+  OrderRepository,
+  Shipment,
+  ShipmentRepository,
+} from '../fixtures/models';
 import {givenBoundCrudRepositories} from '../helpers';
-import { createBelongsToAccessor, BelongsToDefinition, Getter, BelongsToAccessor, EntityNotFoundError } from '@loopback/repository';
 
 export function belongsToRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -30,12 +43,9 @@ export function belongsToRelationAcceptance(
       Customer,
       typeof Order.prototype.id
     >;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let customerRepo: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let orderRepo: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let shipmentRepo: any;
+    let customerRepo: CustomerRepository;
+    let orderRepo: OrderRepository;
+    let shipmentRepo: ShipmentRepository;
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
@@ -60,13 +70,12 @@ export function belongsToRelationAcceptance(
         customerId: customer.id,
         description: 'Order from Order McForder, the hoarder of Mordor',
       });
-      
+
       const result = await orderRepo.customer(order.id);
-      // FIXME(agnes512)
-      // don't need to check parentId at this point, but still need to pass it
-      // in here so that MySQL won't complain
-      expect(toJSON({...result, parentId: 1})).to.deepEqual(
-        toJSON({...customer, parentId: 1}),
+      // adding parentId to customer so MySQL doesn't complain about null vs
+      // undefined
+      expect(toJSON(result)).to.deepEqual(
+        toJSON({...customer, parentId: features.emptyValue}),
       );
     });
 
@@ -94,7 +103,7 @@ export function belongsToRelationAcceptance(
       );
     });
     // helpers
-  
+
     function givenAccessor() {
       findCustomerOfOrder = createBelongsToAccessor(
         Order.definition.relations.customer as BelongsToDefinition,

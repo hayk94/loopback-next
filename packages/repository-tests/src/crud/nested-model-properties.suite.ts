@@ -6,14 +6,15 @@
 import {
   DefaultCrudRepository,
   Entity,
+  EntityCrudRepository,
   juggler,
   model,
   property,
-  EntityCrudRepository,
 } from '@loopback/repository';
 import {expect, toJSON} from '@loopback/testlab';
 import {
   deleteAllModelsInDefaultDataSource,
+  MixedIdType,
   withCrudCtx,
 } from '../helpers.repository-tests';
 import {
@@ -30,20 +31,17 @@ export function nestedModelsPropertiesSuite(
 ) {
   describe('Nested models properties', () => {
     let db: juggler.DataSource;
-    let userRepo: EntityCrudRepository<
-    User,
-    typeof User.prototype.id
-  >;
+    let userRepo: EntityCrudRepository<User, typeof User.prototype.id>;
 
     before(deleteAllModelsInDefaultDataSource);
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
         db = ctx.dataSource;
-        userRepo = new DefaultCrudRepository<
-        User,
-        typeof User.prototype.id
-      >(User, db);
+        userRepo = new DefaultCrudRepository<User, typeof User.prototype.id>(
+          User,
+          db,
+        );
         const models = [User];
         await db.automigrate(models.map(m => m.name));
       }),
@@ -77,33 +75,33 @@ export function nestedModelsPropertiesSuite(
     });
 
     @model()
-      class Role extends Entity {
-        @property()
-        name: string;
-      }
+    class Role extends Entity {
+      @property()
+      name: string;
+    }
 
-      @model()
-      class Address extends Entity {
-        @property()
-        street: string;
-      }
+    @model()
+    class Address extends Entity {
+      @property()
+      street: string;
+    }
 
-      @model()
-      class User extends Entity {
-        @property({
-          id: true,
-          generated: true,
-        })
-        id: unknown;
+    @model()
+    class User extends Entity {
+      @property({
+        id: true,
+        generated: true,
+      })
+      id: MixedIdType;
 
-        @property({type: 'string'})
-        name: string;
+      @property({type: 'string'})
+      name: string;
 
-        @property.array(Role)
-        roles: Role[];
+      @property.array(Role)
+      roles: Role[];
 
-        @property()
-        address: Address;
-      }
+      @property()
+      address: Address;
+    }
   });
 }

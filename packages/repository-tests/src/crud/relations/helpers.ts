@@ -6,9 +6,15 @@
 import {juggler} from '@loopback/repository';
 import {CrudRepositoryCtor} from '../..';
 import {
-  createOrderRepo,
+  AddressRepository,
+  CustomerRepository,
+  OrderRepository,
+  ShipmentRepository,
+} from './fixtures/models';
+import {
   createAddressRepo,
   createCustomerRepo,
+  createOrderRepo,
   createShipmentRepo,
 } from './fixtures/repositories';
 
@@ -18,28 +24,30 @@ export function givenBoundCrudRepositories(
 ) {
   // get the repository class and create a new instance of it
   const customerRepoClass = createCustomerRepo(repositoryClass);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const customerRepo: any = new customerRepoClass(
+  const customerRepo: CustomerRepository = new customerRepoClass(
     db,
     async () => orderRepo,
     async () => addressRepo,
   );
 
   const orderRepoClass = createOrderRepo(repositoryClass);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const orderRepo: any = new orderRepoClass(
+  const orderRepo: OrderRepository = new orderRepoClass(
     db,
     async () => customerRepo,
     async () => shipmentRepo,
   );
 
   const shipmentRepoClass = createShipmentRepo(repositoryClass);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const shipmentRepo: any = new shipmentRepoClass(db, async () => orderRepo);
+  const shipmentRepo: ShipmentRepository = new shipmentRepoClass(
+    db,
+    async () => orderRepo,
+  );
 
   const addressRepoClass = createAddressRepo(repositoryClass);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const addressRepo: any = new addressRepoClass(db, async () => customerRepo);
+  const addressRepo: AddressRepository = new addressRepoClass(
+    db,
+    async () => customerRepo,
+  );
 
   return {customerRepo, orderRepo, shipmentRepo, addressRepo};
 }

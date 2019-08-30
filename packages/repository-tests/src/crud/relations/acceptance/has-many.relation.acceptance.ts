@@ -13,9 +13,15 @@ import {
 } from '../../..';
 import {
   deleteAllModelsInDefaultDataSource,
+  MixedIdType,
   withCrudCtx,
 } from '../../../helpers.repository-tests';
-import {Customer, Order} from '../fixtures/models';
+import {
+  Customer,
+  CustomerRepository,
+  Order,
+  OrderRepository,
+} from '../fixtures/models';
 import {givenBoundCrudRepositories} from '../helpers';
 
 export function hasManyRelationAcceptance(
@@ -25,13 +31,9 @@ export function hasManyRelationAcceptance(
 ) {
   describe('HasMany relation (acceptance)', () => {
     before(deleteAllModelsInDefaultDataSource);
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let customerRepo: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let orderRepo: any;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let existingCustomerId: unknown;
+    let customerRepo: CustomerRepository;
+    let orderRepo: OrderRepository;
+    let existingCustomerId: MixedIdType;
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
@@ -65,10 +67,13 @@ export function hasManyRelationAcceptance(
       );
 
       const persisted = await orderRepo.findById(order.id);
-      // eslint-disable-next-line @typescript-eslint/camelcase
-      expect(toJSON({...persisted, shipment_id: 1})).to.deepEqual(
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        toJSON({...order, shipment_id: 1, isShipped: features.emptyValue}),
+      expect(toJSON(persisted)).to.deepEqual(
+        toJSON({
+          ...order,
+          isShipped: features.emptyValue,
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          shipment_id: features.emptyValue,
+        }),
       );
     });
 
@@ -82,8 +87,12 @@ export function hasManyRelationAcceptance(
       });
       const foundOrders = await findCustomerOrders(existingCustomerId);
       expect(toJSON(foundOrders)).to.containEql(
-        // eslint-disable-next-line @typescript-eslint/camelcase
-        toJSON({...order, shipment_id: features.emptyValue, isShipped: features.emptyValue}),
+        toJSON({
+          ...order,
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          shipment_id: features.emptyValue,
+          isShipped: features.emptyValue,
+        }),
       );
       expect(toJSON(foundOrders)).to.not.containEql(toJSON(notMyOrder));
 
@@ -211,39 +220,39 @@ export function hasManyRelationAcceptance(
 
     // repository helper methods
     async function createCustomerOrders(
-      customerId: unknown,
+      customerId: MixedIdType,
       orderData: Partial<Order>,
     ): Promise<Order> {
       return customerRepo.orders(customerId).create(orderData);
     }
 
-    async function findCustomerOrders(customerId: unknown) {
+    async function findCustomerOrders(customerId: MixedIdType) {
       return customerRepo.orders(customerId).find();
     }
 
     async function patchCustomerOrders(
-      customerId: unknown,
+      customerId: MixedIdType,
       order: Partial<Order>,
     ) {
       return customerRepo.orders(customerId).patch(order);
     }
 
-    async function deleteCustomerOrders(customerId: unknown) {
+    async function deleteCustomerOrders(customerId: MixedIdType) {
       return customerRepo.orders(customerId).delete();
     }
 
-    async function getParentCustomer(customerId: unknown) {
+    async function getParentCustomer(customerId: MixedIdType) {
       return customerRepo.parent(customerId);
     }
 
     async function createCustomerChildren(
-      customerId: unknown,
+      customerId: MixedIdType,
       customerData: Partial<Customer>,
     ) {
       return customerRepo.customers(customerId).create(customerData);
     }
 
-    async function findCustomerChildren(customerId: unknown) {
+    async function findCustomerChildren(customerId: MixedIdType) {
       return customerRepo.customers(customerId).find();
     }
 
