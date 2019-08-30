@@ -3,6 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
+import {transformFunctionBody} from '@loopback/model-api-builder';
 import {
   Count,
   CountSchema,
@@ -32,7 +33,6 @@ import {
   ResponsesObject,
   SchemaObject,
 } from '@loopback/rest';
-import {transformFunctionBody} from './helpers';
 import assert = require('assert');
 
 // Ideally, this file should simply `export class CrudRestController<...>{}`
@@ -77,6 +77,8 @@ export interface CrudRestController<
    * @param data Model data
    */
   create(data: Omit<T, IdName>): Promise<T>;
+
+  // TODO(bajtos) define other methods like `deleteById`, etc.
 }
 
 /**

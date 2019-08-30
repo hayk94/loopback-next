@@ -3,6 +3,7 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
+import {transformFunctionBody} from '@loopback/model-api-builder';
 import {
   DefaultCrudRepository,
   Entity,
@@ -10,7 +11,6 @@ import {
   juggler,
 } from '@loopback/repository';
 import * as assert from 'assert';
-import {transformFunctionBody} from './helpers';
 
 export function defineRepositoryClass<
   T extends Entity,

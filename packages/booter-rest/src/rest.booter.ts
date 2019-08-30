@@ -30,15 +30,6 @@ import {promisify} from 'util';
 const debug = debugFactory('loopback:boot:rest-booter');
 const readFile = promisify(fs.readFile);
 
-/* Ideally, we want to call the following decorators:
-  @booter('rest')
-  @extensionPoint(MODEL_API_BUILDER_PLUGINS)
-Unfortunately, BindDecoratorFactory is not able to merge metadata from multiple
-calls yet and the code shown throw the following error:
-  Decorator BindDecoratorFactory cannot be applied more than once
-  on class RestBooter
-As a temporary fix to get this spike
-*/
 @booter('rest')
 @extensionPoint(MODEL_API_BUILDER_PLUGINS)
 export class RestBooter extends BaseArtifactBooter {

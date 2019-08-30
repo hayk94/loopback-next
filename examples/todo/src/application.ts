@@ -45,7 +45,8 @@ export class TodoListApplication extends BootMixin(
 
   async boot(): Promise<void> {
     // temporary workaround for missing Model booter
-    this.bind('models.Todo').to(Todo);
+    this.model(Todo);
+
     return super.boot();
   }
 }
