@@ -16,7 +16,7 @@ import {
   withCrudCtx,
 } from '../../../helpers.repository-tests';
 import {Address, Customer} from '../fixtures/models';
-import {givenBoundCrudRepositories, mixedIdType} from '../helpers';
+import {givenBoundCrudRepositories} from '../helpers';
 
 export function hasOneRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -29,7 +29,7 @@ export function hasOneRelationAcceptance(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let addressRepo: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let existingCustomerId: any;
+    let existingCustomerId: unknown;
 
     before(deleteAllModelsInDefaultDataSource);
 
@@ -191,9 +191,10 @@ export function hasOneRelationAcceptance(
     });
 
     it('throws an error when PATCH tries to change the foreignKey', async () => {
+      const anotherId = (await givenPersistedCustomerInstance()).id;
       await expect(
         patchCustomerAddress(existingCustomerId, {
-          customerId: existingCustomerId + 1,
+          customerId: anotherId,
         }),
       ).to.be.rejectedWith(/Property "customerId" cannot be changed!/);
     });
@@ -232,30 +233,30 @@ export function hasOneRelationAcceptance(
     /*---------------- HELPERS -----------------*/
 
     async function createCustomerAddress(
-      customerId: mixedIdType,
+      customerId: unknown,
       addressData: Partial<Address>,
     ): Promise<Address> {
       return customerRepo.address(customerId).create(addressData);
     }
 
-    async function findCustomerAddress(customerId: mixedIdType) {
+    async function findCustomerAddress(customerId: unknown) {
       return customerRepo.address(customerId).get();
     }
 
     async function findCustomerAddressWithFilter(
-      customerId: mixedIdType,
+      customerId: unknown,
       filter: Filter<Address>,
     ) {
       return customerRepo.address(customerId).get(filter);
     }
     async function patchCustomerAddress(
-      customerId: mixedIdType,
+      customerId: unknown,
       addressData: Partial<Address>,
     ) {
       return customerRepo.address(customerId).patch(addressData);
     }
 
-    async function deleteCustomerAddress(customerId: mixedIdType) {
+    async function deleteCustomerAddress(customerId: unknown) {
       return customerRepo.address(customerId).delete();
     }
 

@@ -9,8 +9,9 @@ import {
   juggler,
   model,
   property,
+  EntityCrudRepository,
 } from '@loopback/repository';
-import {expect} from '@loopback/testlab';
+import {expect, toJSON} from '@loopback/testlab';
 import {
   deleteAllModelsInDefaultDataSource,
   withCrudCtx,
@@ -27,21 +28,55 @@ export function nestedModelsPropertiesSuite(
   repositoryClass: CrudRepositoryCtor,
   features: CrudFeatures,
 ) {
-  // This test shows the recommended way how to use @loopback/repository
-  // together with existing connectors when building LoopBack applications
   describe('Nested models properties', () => {
     let db: juggler.DataSource;
+    let userRepo: EntityCrudRepository<
+    User,
+    typeof User.prototype.id
+  >;
 
     before(deleteAllModelsInDefaultDataSource);
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
         db = ctx.dataSource;
+        userRepo = new DefaultCrudRepository<
+        User,
+        typeof User.prototype.id
+      >(User, db);
+        const models = [User];
+        await db.automigrate(models.map(m => m.name));
       }),
     );
+    beforeEach(async function resetDatabase() {
+      await userRepo.deleteAll();
+    });
 
-    it('allows models to allow nested model properties', async () => {
-      @model()
+    it('allows models to allow a singel nested model property', async () => {
+      const user = {
+        name: 'foo',
+        roles: [],
+        address: {street: 'backstreet'},
+      };
+      const created = await userRepo.create(user);
+
+      const stored = await userRepo.findById(created.id);
+      expect(toJSON(stored)).to.containDeep(toJSON(user));
+    });
+
+    it('allows models to allow multiple nested model properties in an array', async () => {
+      const user = {
+        name: 'foo',
+        roles: [{name: 'admin'}, {name: 'user'}],
+        address: {street: 'backstreet'},
+      };
+      const created = await userRepo.create(user);
+
+      const stored = await userRepo.findById(created.id);
+      expect(toJSON(stored)).to.containDeep(toJSON(user));
+    });
+
+    @model()
       class Role extends Entity {
         @property()
         name: string;
@@ -56,11 +91,10 @@ export function nestedModelsPropertiesSuite(
       @model()
       class User extends Entity {
         @property({
-          type: 'number',
           id: true,
           generated: true,
         })
-        id: number;
+        id: unknown;
 
         @property({type: 'string'})
         name: string;
@@ -71,24 +105,5 @@ export function nestedModelsPropertiesSuite(
         @property()
         address: Address;
       }
-
-      const userRepo = new DefaultCrudRepository<
-        User,
-        typeof User.prototype.id
-      >(User, db);
-
-      const models = [User, Role, Address];
-      await db.automigrate(models.map(m => m.name));
-
-      const user = {
-        name: 'foo',
-        roles: [{name: 'admin'}, {name: 'user'}],
-        address: {street: 'backstreet'},
-      };
-      const created = await userRepo.create(user);
-
-      const stored = await userRepo.findById(created.id);
-      expect(stored).to.containDeep(user);
-    });
   });
 }

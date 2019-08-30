@@ -62,7 +62,7 @@ export function crudRepositoryTestSuite(
     });
 
     // relations folder tests
-    const folders = ['acceptance', 'integration'];
+    const folders = ['acceptance'];
 
     for (const folder of folders) {
       const relationsTestRoot = path.resolve(
@@ -73,9 +73,7 @@ export function crudRepositoryTestSuite(
       folderTestFiles = folderTestFiles.filter(function(it) {
         return (
           (!!require.extensions[path.extname(it).toLowerCase()] &&
-            /\.acceptance\.[^.]+$/.test(it)) ||
-          (!!require.extensions[path.extname(it).toLowerCase()] &&
-            /\.integration\.[^.]+$/.test(it))
+            /\.acceptance\.[^.]+$/.test(it))
         );
       });
       folderTestFiles.forEach(file => {

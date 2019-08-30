@@ -6,16 +6,14 @@
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {Customer, CustomerWithRelations} from './customer.model';
 import {Shipment, ShipmentWithRelations} from './shipment.model';
-import {mixedIdType} from '../../helpers';
 
 @model()
 export class Order extends Entity {
   @property({
-    type: 'number',
     id: true,
     generated: true,
   })
-  id: mixedIdType;
+  id: unknown;
 
   @property({
     type: 'string',
@@ -26,15 +24,14 @@ export class Order extends Entity {
   @property({
     type: 'boolean',
     required: false,
-    default: false,
   })
   isShipped: boolean;
 
   @belongsTo(() => Customer)
-  customerId: mixedIdType;
+  customerId: unknown;
 
   @belongsTo(() => Shipment, {name: 'shipment'})
-  shipment_id: mixedIdType;
+  shipment_id: unknown;
 }
 
 export interface OrderRelations {

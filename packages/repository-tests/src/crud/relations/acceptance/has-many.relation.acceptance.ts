@@ -16,7 +16,7 @@ import {
   withCrudCtx,
 } from '../../../helpers.repository-tests';
 import {Customer, Order} from '../fixtures/models';
-import {givenBoundCrudRepositories, mixedIdType} from '../helpers';
+import {givenBoundCrudRepositories} from '../helpers';
 
 export function hasManyRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -31,7 +31,7 @@ export function hasManyRelationAcceptance(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let orderRepo: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let existingCustomerId: any;
+    let existingCustomerId: unknown;
 
     before(
       withCrudCtx(async function setupRepository(ctx: CrudTestContext) {
@@ -69,7 +69,7 @@ export function hasManyRelationAcceptance(
       // eslint-disable-next-line @typescript-eslint/camelcase
       expect(toJSON({...persisted, shipment_id: 1})).to.deepEqual(
         // eslint-disable-next-line @typescript-eslint/camelcase
-        toJSON({...order, shipment_id: 1}),
+        toJSON({...order, shipment_id: 1, isShipped: features.emptyValue}),
       );
     });
 
@@ -77,13 +77,14 @@ export function hasManyRelationAcceptance(
       const order = await createCustomerOrders(existingCustomerId, {
         description: 'order 1',
       });
-      const notMyOrder = await createCustomerOrders(existingCustomerId + 1, {
+      const anotherId = (await givenPersistedCustomerInstance()).id;
+      const notMyOrder = await createCustomerOrders(anotherId, {
         description: 'order 2',
       });
       const foundOrders = await findCustomerOrders(existingCustomerId);
       expect(toJSON(foundOrders)).to.containEql(
         // eslint-disable-next-line @typescript-eslint/camelcase
-        toJSON({...order, shipment_id: features.emptyValue}),
+        toJSON({...order, shipment_id: features.emptyValue, isShipped: features.emptyValue}),
       );
       expect(toJSON(foundOrders)).to.not.containEql(toJSON(notMyOrder));
 
@@ -128,9 +129,10 @@ export function hasManyRelationAcceptance(
     });
 
     it('throws error when query tries to change the foreignKey', async () => {
+      const anotherId = (await givenPersistedCustomerInstance()).id;
       await expect(
         patchCustomerOrders(existingCustomerId, {
-          customerId: existingCustomerId + 1,
+          customerId: anotherId,
         }),
       ).to.be.rejectedWith(/Property "customerId" cannot be changed!/);
     });
@@ -210,39 +212,39 @@ export function hasManyRelationAcceptance(
 
     // repository helper methods
     async function createCustomerOrders(
-      customerId: mixedIdType,
+      customerId: unknown,
       orderData: Partial<Order>,
     ): Promise<Order> {
       return customerRepo.orders(customerId).create(orderData);
     }
 
-    async function findCustomerOrders(customerId: mixedIdType) {
+    async function findCustomerOrders(customerId: unknown) {
       return customerRepo.orders(customerId).find();
     }
 
     async function patchCustomerOrders(
-      customerId: mixedIdType,
+      customerId: unknown,
       order: Partial<Order>,
     ) {
       return customerRepo.orders(customerId).patch(order);
     }
 
-    async function deleteCustomerOrders(customerId: mixedIdType) {
+    async function deleteCustomerOrders(customerId: unknown) {
       return customerRepo.orders(customerId).delete();
     }
 
-    async function getParentCustomer(customerId: mixedIdType) {
+    async function getParentCustomer(customerId: unknown) {
       return customerRepo.parent(customerId);
     }
 
     async function createCustomerChildren(
-      customerId: mixedIdType,
+      customerId: unknown,
       customerData: Partial<Customer>,
     ) {
       return customerRepo.customers(customerId).create(customerData);
     }
 
-    async function findCustomerChildren(customerId: mixedIdType) {
+    async function findCustomerChildren(customerId: unknown) {
       return customerRepo.customers(customerId).find();
     }
 

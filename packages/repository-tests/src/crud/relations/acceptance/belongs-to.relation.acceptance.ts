@@ -47,7 +47,7 @@ export function belongsToRelationAcceptance(
       await orderRepo.deleteAll();
     });
 
-    it('can find customer of order', async () => {
+    it.only('can find customer of order', async () => {
       const customer = await customerRepo.create({
         name: 'Order McForder',
       });
@@ -55,8 +55,9 @@ export function belongsToRelationAcceptance(
         customerId: customer.id,
         description: 'Order from Order McForder, the hoarder of Mordor',
       });
-
+      
       const result = await orderRepo.customer(order.id);
+      // FIXME(agnes512)
       // don't need to check parentId at this point, but still need to pass it
       // in here so that MySQL won't complain
       expect(toJSON({...result, parentId: 1})).to.deepEqual(

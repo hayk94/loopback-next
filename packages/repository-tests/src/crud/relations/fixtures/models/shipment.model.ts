@@ -5,16 +5,14 @@
 
 import {Entity, hasMany, model, property} from '@loopback/repository';
 import {Order, OrderWithRelations} from './order.model';
-import {mixedIdType} from '../../helpers';
 
 @model()
 export class Shipment extends Entity {
   @property({
-    type: 'number',
     id: true,
     generated: true,
   })
-  id: mixedIdType;
+  id: unknown;
 
   @property({type: 'string'})
   name: string;

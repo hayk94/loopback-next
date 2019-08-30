@@ -43,5 +43,3 @@ export function givenBoundCrudRepositories(
 
   return {customerRepo, orderRepo, shipmentRepo, addressRepo};
 }
-
-export type mixedIdType = string | number;

@@ -5,16 +5,14 @@
 
 import {belongsTo, Entity, model, property} from '@loopback/repository';
 import {Customer, CustomerWithRelations} from './customer.model';
-import {mixedIdType} from '../../helpers';
 
 @model()
 export class Address extends Entity {
   @property({
-    type: 'number',
     id: true,
     generated: true,
   })
-  id: mixedIdType;
+  id: unknown;
   @property({
     type: 'string',
   })
@@ -33,7 +31,7 @@ export class Address extends Entity {
   province: string;
 
   @belongsTo(() => Customer)
-  customerId: mixedIdType;
+  customerId: unknown;
 }
 
 export interface AddressRelations {

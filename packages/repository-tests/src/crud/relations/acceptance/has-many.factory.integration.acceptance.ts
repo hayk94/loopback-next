@@ -42,7 +42,6 @@ export function hasManyFactorySuite(
   let reviewRepo: EntityCrudRepository<Review, typeof Review.prototype.id>;
 
   describe('HasMany relation (integration)', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let existingCustomerId: any;
 
     let customerOrderRepo: HasManyRepository<Order>;
@@ -64,9 +63,7 @@ export function hasManyFactorySuite(
         await givenPersistedCustomerInstance();
         givenConstrainedRepositories();
         givenRepositoryFactoryFunctions();
-        await ctx.dataSource.automigrate(Review.name);
-        await ctx.dataSource.automigrate(Customer.name);
-        await ctx.dataSource.automigrate(Order.name);
+        await ctx.dataSource.automigrate([Review.name, Customer.name, Order.name]);
       }),
     );
 
@@ -187,14 +184,14 @@ export function hasManyFactorySuite(
   //--- HELPERS ---//
 
   class Order extends Entity {
-    id: string;
+    id: unknown;
     description: string;
-    customerId: string;
+    customerId: unknown;
 
     static definition = new ModelDefinition('Order')
       .addProperty('id', {type: features.idType, id: true, generated: true})
       .addProperty('description', {type: 'string', required: true})
-      .addProperty('customerId', {type: 'string'})
+      .addProperty('customerId', {type: features.idType, required: true})
       .addRelation({
         name: 'customer',
         type: RelationType.belongsTo,
@@ -206,10 +203,10 @@ export function hasManyFactorySuite(
   }
 
   class Review extends Entity {
-    id: string;
+    id: unknown;
     description: string;
-    authorId: string;
-    approvedId: string;
+    authorId: unknown;
+    approvedId: unknown;
 
     static definition = new ModelDefinition('Review')
       .addProperty('id', {type: features.idType, id: true, generated: true})
@@ -219,7 +216,7 @@ export function hasManyFactorySuite(
   }
 
   class Customer extends Entity {
-    id: string;
+    id: unknown;
     name: string;
     orders: Order[];
     reviewsAuthored: Review[];

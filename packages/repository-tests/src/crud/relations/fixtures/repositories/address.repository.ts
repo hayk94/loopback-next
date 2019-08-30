@@ -29,8 +29,7 @@ export function createAddressRepo(repoClass: CrudRepositoryCtor) {
       customerRepositoryGetter: Getter<typeof repoClass.prototype>,
     ) {
       super(Address, db);
-      // cant use the method createHasManyRepositoryFactoryFor from DefaultCrud
-      // cause it's protected.
+      // create a belongsto relation from this public method
       const customerMeta = this.entityClass.definition.relations['customer'];
       this.customer = createBelongsToAccessor(
         customerMeta as BelongsToDefinition,
