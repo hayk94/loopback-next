@@ -39,8 +39,7 @@ export function hasManyRelationAcceptance(
           ctx.dataSource,
           repositoryClass,
         ));
-        const models = [Customer, Order];
-        await ctx.dataSource.automigrate(models.map(m => m.name));
+        await ctx.dataSource.automigrate([Customer.name, Order.name]);
       }),
     );
 
@@ -75,11 +74,11 @@ export function hasManyRelationAcceptance(
 
     it('can find instances of the related model', async () => {
       const order = await createCustomerOrders(existingCustomerId, {
-        description: 'order 1',
+        description: 'an order desc',
       });
       const anotherId = (await givenPersistedCustomerInstance()).id;
       const notMyOrder = await createCustomerOrders(anotherId, {
-        description: 'order 2',
+        description: "someone else's order desc",
       });
       const foundOrders = await findCustomerOrders(existingCustomerId);
       expect(toJSON(foundOrders)).to.containEql(

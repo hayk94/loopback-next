@@ -16,6 +16,7 @@ import {
 } from '../../../types.repository-tests';
 import {Customer, Order, Shipment} from '../fixtures/models';
 import {givenBoundCrudRepositories} from '../helpers';
+import { createBelongsToAccessor, BelongsToDefinition, Getter, BelongsToAccessor, EntityNotFoundError } from '@loopback/repository';
 
 export function belongsToRelationAcceptance(
   dataSourceOptions: DataSourceOptions,
@@ -25,6 +26,10 @@ export function belongsToRelationAcceptance(
   describe('BelongsTo relation (acceptance)', () => {
     before(deleteAllModelsInDefaultDataSource);
 
+    let findCustomerOfOrder: BelongsToAccessor<
+      Customer,
+      typeof Order.prototype.id
+    >;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let customerRepo: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,12 +47,12 @@ export function belongsToRelationAcceptance(
         await ctx.dataSource.automigrate(models.map(m => m.name));
       }),
     );
-
+    before(givenAccessor);
     beforeEach(async () => {
       await orderRepo.deleteAll();
     });
 
-    it.only('can find customer of order', async () => {
+    it('can find customer of order', async () => {
       const customer = await customerRepo.create({
         name: 'Order McForder',
       });
@@ -77,5 +82,25 @@ export function belongsToRelationAcceptance(
       const result = await orderRepo.shipment(order.id);
       expect(result).to.deepEqual(shipment);
     });
+
+    it('throws EntityNotFound error when the related model does not exist', async () => {
+      const order = await orderRepo.create({
+        customerId: 999, // does not exist
+        description: 'Order of a fictional customer',
+      });
+
+      await expect(findCustomerOfOrder(order.id)).to.be.rejectedWith(
+        EntityNotFoundError,
+      );
+    });
+    // helpers
+  
+    function givenAccessor() {
+      findCustomerOfOrder = createBelongsToAccessor(
+        Order.definition.relations.customer as BelongsToDefinition,
+        Getter.fromValue(customerRepo),
+        orderRepo,
+      );
+    }
   });
 }
