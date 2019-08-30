@@ -3,7 +3,6 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {transformFunctionBody} from '@loopback/model-api-builder';
 import {
   Count,
   CountSchema,
@@ -258,19 +257,11 @@ export function defineCrudRestController<
     }
   }
 
-  function template(CrudRestController: typeof CrudRestControllerImpl) {
-    return class ModelNameController extends CrudRestController {
-      constructor(repository: EntityCrudRepository<T, IdType, Relations>) {
-        super(repository);
-      }
-    };
-  }
-
   const controllerName = modelName + 'Controller';
-  const defineNamedController = transformFunctionBody(template, code =>
-    code.replace(/\bModelNameController\b/g, controllerName),
+  const defineNamedController = new Function(
+    'CrudRestController',
+    `return class ${controllerName} extends CrudRestController {}`,
   );
-
   const controller = defineNamedController(CrudRestControllerImpl);
   assert.equal(controller.name, controllerName);
   return controller;

@@ -5,4 +5,3 @@
 
 export * from './model-api-builder';
 export * from './model-api-config';
-export * from './transform-function-body';

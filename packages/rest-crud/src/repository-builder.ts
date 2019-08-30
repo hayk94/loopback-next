@@ -3,7 +3,6 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
-import {transformFunctionBody} from '@loopback/model-api-builder';
 import {
   DefaultCrudRepository,
   Entity,
@@ -19,20 +18,15 @@ export function defineRepositoryClass<
 >(
   entityClass: typeof Entity & {prototype: T},
 ): RepositoryClass<T, IdType, Relations> {
-  function template(
-    EntityCtor: typeof Entity & {prototype: T},
-    BaseRepository: CrudRepoCtor<T, IdType, Relations>,
-  ) {
-    return class EntityNameRepository extends BaseRepository {
-      constructor(dataSource: juggler.DataSource) {
+  const repoName = entityClass.name + 'Repository';
+  const defineNamedRepo = new Function(
+    'EntityCtor',
+    'BaseRepository',
+    `return class ${repoName} extends BaseRepository {
+      constructor(dataSource) {
         super(EntityCtor, dataSource);
       }
-    };
-  }
-
-  const repoName = entityClass.name + 'Repository';
-  const defineNamedRepo = transformFunctionBody(template, code =>
-    code.replace(/\EntityNameRepository/, repoName),
+    };`,
   );
 
   // TODO(bajtos) make DefaultCrudRepository configurable (?)
