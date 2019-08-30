@@ -368,8 +368,9 @@ export class ClassDecoratorFactory<T> extends DecoratorFactory<
     descriptorOrIndex?: TypedPropertyDescriptor<any> | number,
   ) {
     if (ownMetadata != null) {
+      const decoratorName = this.constructor.name.replace(/Factory$/, '');
       throw new Error(
-        `Decorator ${this.constructor.name} cannot be applied more than once on ` +
+        `${decoratorName} cannot be applied more than once on ` +
           DecoratorFactory.getTargetName(target),
       );
     }

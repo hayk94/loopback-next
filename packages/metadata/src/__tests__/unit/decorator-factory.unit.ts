@@ -116,7 +116,7 @@ describe('ClassDecoratorFactory', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       class MyController {}
     }).to.throw(
-      /Decorator cannot be applied more than once on class MyController/,
+      /ClassDecorator cannot be applied more than once on class MyController/,
     );
   });
 });
