@@ -3,10 +3,9 @@
 // This file is licensed under the MIT License.
 // License text available at https://opensource.org/licenses/MIT
 
+import * as path from 'path';
 import {readFileSync} from 'fs';
 import {ServerOptions as HttpsServerOptions} from 'https';
-import {ListenOptions} from 'net';
-import * as path from 'path';
 
 const FIXTURES = path.resolve(__dirname, '../fixtures');
 const DUMMY_TLS_CONFIG = {
@@ -14,14 +13,10 @@ const DUMMY_TLS_CONFIG = {
   cert: readFileSync(path.join(FIXTURES, 'cert.pem')),
 };
 
-export interface ConfigRetval extends HttpsServerOptions {
+export type ConfigRetval<T extends object> = T & {
   host: string;
   port: number;
-}
-
-export interface HttpServerConfig extends ListenOptions, HttpsServerOptions {
-  protocol?: 'http' | 'https';
-}
+} & HttpsServerOptions;
 
 /**
  * Create an HTTP-server configuration that works well in test environments.
@@ -32,15 +27,15 @@ export interface HttpServerConfig extends ListenOptions, HttpsServerOptions {
  *
  * @param customConfig - Additional configuration options to apply.
  */
-export function givenHttpServerConfig(
-  customConfig?: HttpServerConfig,
-): ConfigRetval {
+export function givenHttpServerConfig<T extends object>(
+  customConfig?: T & {protocol?: string},
+): ConfigRetval<T> {
   const defaults = {
     host: '127.0.0.1',
     port: 0,
     protocol: undefined,
   };
-  const config: ConfigRetval = Object.assign({}, defaults, customConfig);
+  const config: ConfigRetval<T> = Object.assign({}, defaults, customConfig);
   if (config.host === undefined) config.host = defaults.host;
   if (config.port === undefined) config.port = defaults.port;
   if (customConfig && customConfig.protocol === 'https') {
